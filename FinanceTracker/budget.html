@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Tracker - Budget & Goals</title>
+    <link rel="stylesheet" href="css/budget.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Finance Tracker</h1>
+            <nav id="mainNav">
+                <button class="nav-btn" onclick="navigateTo('dashboard.html')">Dashboard</button>
+                <button class="nav-btn" onclick="navigateTo('dashboard.html')">Transactions</button>
+                <button class="nav-btn active" onclick="navigateTo('budget.html')">Budget</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Budget Overview -->
+            <section class="budget-overview">
+                <h2>Budget Management</h2>
+                <div class="overview-cards">
+                    <div class="overview-card">
+                        <h3>Total Monthly Budget</h3>
+                        <p id="totalBudget" class="amount">₹0.00</p>
+                    </div>
+                    <div class="overview-card">
+                        <h3>Total Spent This Month</h3>
+                        <p id="totalSpent" class="amount">₹0.00</p>
+                    </div>
+                    <div class="overview-card">
+                        <h3>Remaining Budget</h3>
+                        <p id="remainingBudget" class="amount remaining-positive">₹0.00</p>
+                    </div>
+                    <div class="overview-card">
+                        <h3>Budget Utilization</h3>
+                        <p id="budgetUtilization" class="amount">0%</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Select Month Section -->
+            <section class="month-selector">
+                <div class="form-group">
+                    <label for="budgetMonth">Select Month:</label>
+                    <input type="month" id="budgetMonth" onchange="loadBudgetForMonth()">
+                </div>
+                <button class="btn-primary" onclick="copyLastMonthBudget()">Copy Last Month's Budget</button>
+            </section>
+
+            <!-- Set Category Budgets -->
+            <section class="budget-section">
+                <h3>Set Category Budgets</h3>
+                <div id="budgetForm" class="budget-form">
+                    <!-- Budget items will be dynamically added here -->
+                </div>
+                <button class="btn-primary" onclick="saveBudgets()">Save All Budgets</button>
+            </section>
+
+            <!-- Budget Progress Tracker -->
+            <section class="progress-section">
+                <h2>Budget Progress & Spending</h2>
+                <div class="filter-section">
+                    <div class="form-group">
+                        <label for="categoryFilter">Filter by Category:</label>
+                        <select id="categoryFilter" onchange="updateProgressDisplay()">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="progressTracker" class="progress-tracker">
+                    <!-- Progress bars will be dynamically added here -->
+                </div>
+            </section>
+
+            <!-- Savings Goals Section -->
+            <section class="savings-section">
+                <h2>Savings Goals</h2>
+                
+                <!-- Add New Goal Form -->
+                <div class="goal-form-section">
+                    <h3>Create New Savings Goal</h3>
+                    <form id="goalForm" onsubmit="return handleAddGoal(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="goalName">Goal Name:</label>
+                                <input type="text" id="goalName" name="goalName" placeholder="e.g., Vacation, Car, Emergency Fund" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="goalAmount">Target Amount:</label>
+                                <input type="number" id="goalAmount" name="goalAmount" min="0" step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="goalSaved">Amount Already Saved:</label>
+                                <input type="number" id="goalSaved" name="goalSaved" min="0" step="0.01" placeholder="0.00" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="goalDeadline">Target Date (Optional):</label>
+                                <input type="date" id="goalDeadline" name="goalDeadline">
+                            </div>
+                            <div class="form-group">
+                                <label for="goalCategory">Category (Optional):</label>
+                                <select id="goalCategory" name="goalCategory">
+                                    <option value="">Personal Goal</option>
+                                    <option value="travel">Travel</option>
+                                    <option value="emergency">Emergency Fund</option>
+                                    <option value="education">Education</option>
+                                    <option value="investment">Investment</option>
+                                    <option value="home">Home</option>
+                                    <option value="vehicle">Vehicle</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Create Goal</button>
+                    </form>
+                </div>
+
+                <!-- Goals List -->
+                <div class="goals-list-section">
+                    <h3>Your Savings Goals</h3>
+                    <div id="goalsList" class="goals-list">
+                        <p class="empty-state">No savings goals yet. Create one to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Budget Alerts -->
+            <section class="alerts-section">
+                <h2>Budget Alerts</h2>
+                <div id="alertsList" class="alerts-list">
+                    <p class="empty-state">No budget alerts at this time.</p>
+                </div>
+            </section>
+        </main>
+
+        <div id="message" class="message"></div>
+
+        <!-- Edit Goal Modal -->
+        <div id="editGoalModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeEditGoalModal()">&times;</span>
+                <h2>Edit Savings Goal</h2>
+                <form id="editGoalForm" onsubmit="return handleEditGoal(event)">
+                    <input type="hidden" id="editGoalId" name="id">
+                    
+                    <div class="form-group">
+                        <label for="editGoalName">Goal Name:</label>
+                        <input type="text" id="editGoalName" name="goalName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editGoalAmount">Target Amount:</label>
+                        <input type="number" id="editGoalAmount" name="goalAmount" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editGoalSaved">Amount Saved:</label>
+                        <input type="number" id="editGoalSaved" name="goalSaved" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editGoalDeadline">Target Date:</label>
+                        <input type="date" id="editGoalDeadline" name="goalDeadline">
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                        <button type="button" class="btn-secondary" onclick="closeEditGoalModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 Finance Tracker - Secure Financial Management</p>
+        </footer>
+    </div>
+
+    <script src="js/budget.js"></script>
+</body>
+</html>
